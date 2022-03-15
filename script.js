@@ -128,4 +128,30 @@ function imp(){
 
 init();
 
-setInterval(imp, 100);
+// setInterval(imp, 100);
+
+imp()
+imp()
+imp()
+
+// flowers.forEach((f,i) => {
+//   console.log(`kwiatek nr ${i} [${f.Petal_width}, ${f.Petal_length}] leży w klatrze ${f.centroid.color}`)
+// })
+
+
+const rows = flowers.map((f,i) => {
+  return `<tr>
+    <td>${i}</td> 
+    <td>${f.Petal_width}</td>
+    <td>${f.Petal_length}</td>
+    <td>${f.centroid.color}</td>  
+  <tr>`
+})
+
+const ui = document.querySelector("#ui")
+
+ui.innerHTML = `
+<table class="pure-table">
+  ${rows.join('\n')}
+</table>
+`
