@@ -12,52 +12,50 @@ canvas.height = canvas.offsetHeight;
 
 // canvas.addEventListener('paste', e => {console.log(e)})
 
-const flowers = data.map( function(flower){
-  const o = {}
-  flower.forEach((liczba,i) => o[labels[i]] = liczba)
-  return o;
-} )
+let flowers = []
+
+function loadData() {
+  flowers = data.map( function(row, i){
+    return {
+      id: i,
+      petal: {
+        width: row[0],
+        length: row[1]
+      },
+      sepal: {
+        width: row[2],
+        length: row[3]
+      },
+      centroid: undefined,
+      dists: []
+    }
+  } )
+  draw();
+}
 
 const centroids = [
-  // {
-  //   color: 'red',
-  //   Petal_width: 10 * Math.random(),
-  //   Petal_length: 10 * Math.random(),
-  // },
-  // {
-  //   color: 'blue',
-  //   Petal_width: 1,
-  //   Petal_length: 1,
-  // },
-  // {
-  //   color: 'brown',
-  //   Petal_width: 10 * Math.random(),
-  //   Petal_length: 10 * Math.random(),
-  // }
+  
 ]
 
-let r1 = flowers[Math.floor(flowers.length * Math.random())]
-let r2 = flowers[Math.floor(flowers.length * Math.random())]
-let r3 = flowers[Math.floor(flowers.length * Math.random())]
+const colors = ["red", "blue", "brown", "green", "orange", "violet", "aqua"]
 
-centroids.push({
-  color: "red",
-  Petal_width: r1.Petal_width,
-  Petal_length: r1.Petal_length
-})
-centroids.push({
-  color: "blue",
-  Petal_width: r2.Petal_width,
-  Petal_length: r2.Petal_length
-})
-centroids.push({
-  color: "brown",
-  Petal_width: r3.Petal_width,
-  Petal_length: r3.Petal_length
-})
+let n = 3;
+let k = 3;
+let key = 'petal';
+
+function randomizeCentroids() {
+  centroids.length = 0;
+  while(centroids.length < k){
+    const r = flowers[Math.floor(flowers.length * Math.random())]
+    if(!centroids.includes(r)) centroids.push(r);
+  }
+  loadData();
+  // draw();
+}
+
 
 function dist(flower, centroid){
-  return Math.sqrt( Math.pow(flower.Petal_width - centroid.Petal_width, 2) + Math.pow(flower.Petal_length - centroid.Petal_length , 2) )
+  return Math.sqrt( Math.pow(flower[key].width - centroid[key].width, 2) + Math.pow(flower[key].length - centroid[key].length , 2) )
 }
 
 function assignCentroids() {
@@ -73,24 +71,24 @@ function assignCentroids() {
     })
     flower.centroid = centroids[minId];
   })
-  
+  draw();
 }
 
 function draw() {
   ctx.clearRect(0,0,10000,10000);
 
-  flowers.forEach(  flower =>{
-    if(flower.centroid) ctx.fillStyle = flower.centroid.color;
+  flowers.forEach(  (flower,i) =>{
+    if(flower.centroid) ctx.fillStyle = colors[centroids.indexOf(flower.centroid)];
     else ctx.fillStyle = 'black';
     ctx.beginPath();
-    ctx.arc(flower.Petal_width*100,canvas.height-flower.Petal_length*100,4,0,Math.PI*2);
+    ctx.arc(flower[key].width*100,canvas.height-flower[key].length*100,4,0,Math.PI*2);
     ctx.fill();
   })  
   
-  centroids.forEach(  centroid =>{
-    ctx.strokeStyle = centroid.color;
+  centroids.forEach(  (centroid,i) =>{
+    ctx.strokeStyle = colors[i];
     ctx.beginPath();
-    ctx.arc(centroid.Petal_width*100,canvas.height-centroid.Petal_length*100,4,0,Math.PI*2);
+    ctx.arc(centroid[key].width*100,canvas.height-centroid[key].length*100,4,0,Math.PI*2);
     ctx.stroke();
   })
 }
@@ -102,56 +100,68 @@ function improveCentroid(centroid){
   flowers.forEach( (flower,i) => {
     if(centroid === flower.centroid) {
       n++;
-      Petal_width += flower.Petal_width;
-      Petal_length += flower.Petal_length;
+      Petal_width += flower[key].width;
+      Petal_length += flower[key].length;
     }
   } )
   if(n <= 0) return;
   Petal_width /= n;
   Petal_length /= n;
-  centroid.Petal_length = Petal_length;
-  centroid.Petal_width = Petal_width;
+  centroid[key].length = Petal_length;
+  centroid[key].width = Petal_width;
 }
 function improve(){
   centroids.forEach( c => improveCentroid(c))
-}
-
-function init(){
-  assignCentroids()
-  draw()
-}
-function imp(){
-  improve()
-  assignCentroids()
   draw()
 }
 
-init();
+const keyInput = document.querySelector("#key-input")
+keyInput.onchange = (e => {
+  key = keyInput.value
 
-// setInterval(imp, 100);
-
-imp()
-imp()
-imp()
-
-// flowers.forEach((f,i) => {
-//   console.log(`kwiatek nr ${i} [${f.Petal_width}, ${f.Petal_length}] leży w klatrze ${f.centroid.color}`)
-// })
-
-
-const rows = flowers.map((f,i) => {
-  return `<tr>
-    <td>${i}</td> 
-    <td>${f.Petal_width}</td>
-    <td>${f.Petal_length}</td>
-    <td>${f.centroid.color}</td>  
-  <tr>`
+})
+const kInput = document.querySelector("#k-input")
+kInput.onchange = (e => {
+  k = parseInt(e.target.value)
 })
 
-const ui = document.querySelector("#ui")
+const nInput = document.querySelector("#n-input")
+nInput.onchange = (e => {
+  n = parseInt(e.target.value)
+})
 
-ui.innerHTML = `
-<table class="pure-table">
-  ${rows.join('\n')}
-</table>
-`
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function calcualate() {
+  console.log(`calcualations will begin shortly`)
+  console.dir({n,k,key})
+  loadData();
+  // await wait(200);
+  randomizeCentroids();
+  // await wait(200);
+  assignCentroids();
+  // await wait(800);
+  for (let i = 0; i < n; i++) {
+
+    improve();
+    // await wait(500);
+    assignCentroids();
+    // await wait(500);
+  }
+  output.innerHTML = table(
+    flowers.map(f=>{
+      return [f.id, f[key].width, f[key].length, colors[centroids.indexOf(f.centroid)]]
+    }),
+    ['id',`${key} width`,`${key} length`,'assignd cluster']
+  )
+}
+
+const randBtn = document.querySelector("#rand-btn")
+randBtn.onclick = randomizeCentroids
+const calcBtn = document.querySelector("#calc-btn")
+calcBtn.onclick = calcualate
+const bothBtn = document.querySelector("#both-btn")
+
+const output = document.querySelector("#output")

@@ -19,3 +19,9 @@ html, body, #wrapper{
   height: 100vh;
   flex-grow: 1;
 }
+
+
+
+.pure-table td, .pure-table th{
+  padding: 0;
+}
